@@ -6,11 +6,10 @@ void preencheHexaPtr(void* f, unsigned char codigo[], int* indice)
 {
     unsigned long int endLong = (unsigned long int)f; 
 
-    printf("%x\n",endLong);
     for(int i = 0; i < 8; i++)
     {     
-        codigo[*(indice)] = endLong & 0xff;
-        *(indice)++;
+        codigo[(*indice)] = endLong & 0xff;
+        (*indice)++;
         endLong >>= 8;
 
     }
@@ -19,7 +18,7 @@ void preencheHexaPtr(void* f, unsigned char codigo[], int* indice)
 void preencheHexaInt(int valor, unsigned char codigo[], int* indice){
     for(int i = 0; i < 4; i++)
     {
-       codigo[*(indice)++] = valor & 0xff;
+       codigo[(*indice)++] = valor & 0xff;
        valor >>= 8;
     } 
 }
