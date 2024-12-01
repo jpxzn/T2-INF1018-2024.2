@@ -1,3 +1,5 @@
+//João Pedro Zaidman dos Santos Gonçalves 2320464 3WA
+//Davi Donato dos Santos Cirne 2320399 3WA
 #include <stdio.h>
 #include <stdlib.h>
 #include "cria_func.h"
