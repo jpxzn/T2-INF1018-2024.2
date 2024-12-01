@@ -2,23 +2,24 @@
 #include <stdlib.h>
 #include "cria_func.h"
 
+//preenche o vertor do código com o valor hexadecimal de 8bytes(void*) necessário para instrução assembly
 void preencheHexaPtr(void* f, unsigned char codigo[], int* indice)
 {
     unsigned long int endLong = (unsigned long int)f;
-    printf("Endereço da função (preencheHexaPtr): %lx\n", endLong);  // Verifique o endereço
-    for (int i = 0; i < 8; i++) {     
-        printf("Preenchendo código[%d] com: %hhx\n", *indice, (unsigned char)(endLong & 0xff)); // Adicionando prints para cada byte
+
+    for (int i = 0; i < 8; i++) 
+    {     
         codigo[*indice] = (unsigned char)(endLong & 0xff);
         (*indice)++;
         endLong >>= 8;
     }
 }
 
+//preenche o vertor do código com o valor hexadecimal de 4bytes(int) necessário para instrução assembly
 void preencheHexaInt(int valor, unsigned char codigo[], int* indice)
 {
-    printf("Valor inteiro (preencheHexaInt): %x\n", valor);  // Imprime o valor de cada parâmetro inteiro
-    for (int i = 0; i < 4; i++) {
-        printf("Preenchendo código[%d] com: %hhx\n", *indice, (unsigned char)(valor & 0xff)); // Adicionando prints para cada byte
+    for (int i = 0; i < 4; i++) 
+    {
         codigo[*indice] = (unsigned char)(valor & 0xff);
         (*indice)++;
         valor >>= 8;
@@ -28,7 +29,8 @@ void preencheHexaInt(int valor, unsigned char codigo[], int* indice)
 
 void cria_func (void* f, DescParam params[], int n, unsigned char codigo[])
 {
-    if (n < 1 || n > 3) {
+    if (n < 1 || n > 3) 
+    {
         fprintf(stderr, "Foram recebidos %d parametros. Apenas sao aceitos entre 1 a 3 parametros!\n", n);
         exit(1);
     }
@@ -36,31 +38,38 @@ void cria_func (void* f, DescParam params[], int n, unsigned char codigo[])
     int indice = 0;
 
     //parte fixa
-    codigo[indice++] = 0x55; 
+    codigo[indice++] = 0x55; //pushq %rbp
+
+    //movq %rsp, %rbp
     codigo[indice++] = 0x48; 
     codigo[indice++] = 0x89; 
     codigo[indice++] = 0xe5;
 
+    //subq $32, %rsp
     codigo[indice++] = 0x48; 
     codigo[indice++] = 0x83;
     codigo[indice++] = 0xec;
     codigo[indice++] = 0x20;
 
+    //movq %rdi, -8(%rbp)
     codigo[indice++] = 0x48; 
     codigo[indice++] = 0x89;
     codigo[indice++] = 0x7d;
     codigo[indice++] = 0xf8;
 
+    //movq %rsi, -16(%rbp)
     codigo[indice++] = 0x48; 
     codigo[indice++] = 0x89;
     codigo[indice++] = 0x75;
     codigo[indice++] = 0xf0;
 
+    //movq %rdx, -24(%rbp)
     codigo[indice++] = 0x48; 
     codigo[indice++] = 0x89;
     codigo[indice++] = 0x55;
     codigo[indice++] = 0xe8;
 
+    //variável para controlar qual registrador tenho que pegar o valor na pilha
     int qtdParams = 0;
 
     //parte variante
@@ -72,14 +81,14 @@ void cria_func (void* f, DescParam params[], int n, unsigned char codigo[])
             
             if(params[i].tipo_val == PTR_PAR)
             {
-                printf("Parametro %d é PTR_PAR com valor de ponteiro.\n", i);
+                //movq $endereço, %registradorParametro
                 codigo[indice++] = 0x48;
                 codigo[indice++] = regs[i];
                 preencheHexaPtr(params[i].valor.v_ptr, codigo, &indice);
             } 
             else if(params[i].tipo_val == INT_PAR)
             {
-                printf("Parametro %d é INT_PAR com valor %d.\n", i, params[i].valor.v_int);
+                //movl $valorIntHexa, %registradorParametro
                 codigo[indice++] = regs[i];
                 preencheHexaInt(params[i].valor.v_int, codigo, &indice);
             }
@@ -88,24 +97,21 @@ void cria_func (void* f, DescParam params[], int n, unsigned char codigo[])
         {
             unsigned char regs[3] = {0x39, 0x31, 0x11};
 
+            //movq $endereço, %rcx
+            codigo[indice++] = 0x48; 
+            codigo[indice++] = 0xb9;
+            preencheHexaPtr(params[i].valor.v_ptr, codigo, &indice);
+
             if(params[i].tipo_val == PTR_PAR)
             {
-                printf("Parametro %d é PTR_PAR e é indireto.\n", i);
-                codigo[indice++] = 0x48; 
-                codigo[indice++] = 0xb9;
-                preencheHexaPtr(params[i].valor.v_ptr, codigo, &indice);
-
+                //movq (%rcx), %registradorParametro
                 codigo[indice++] = 0x48;
                 codigo[indice++] = 0x8b;
                 codigo[indice++] = regs[i];
             }
             else if(params[i].tipo_val == INT_PAR)
             {
-                printf("Parametro %d é INT_PAR e é indireto.\n", i);
-                codigo[indice++] = 0x48; 
-                codigo[indice++] = 0xb9;
-                preencheHexaPtr(params[i].valor.v_ptr, codigo, &indice);
-
+                //movl (%rcx), %registradorParametro
                 codigo[indice++] = 0x8b;
                 codigo[indice++] = regs[i];
             }
@@ -115,9 +121,10 @@ void cria_func (void* f, DescParam params[], int n, unsigned char codigo[])
         {
             unsigned char origem[3] = {0xf8, 0xf0, 0xe8};
             unsigned char destino[3] = {0x7d, 0x75, 0x55};
+
             if(params[i].tipo_val == INT_PAR)
             {
-                printf("Parametro %d é INT_PAR e é passado como PARAM.\n", i);
+                //movl -?(%rbp), %registradorParametro
                 codigo[indice++] = 0x8b;
                 codigo[indice++] = destino[i];
                 codigo[indice++] = origem[qtdParams];
@@ -125,7 +132,7 @@ void cria_func (void* f, DescParam params[], int n, unsigned char codigo[])
 
             else if(params[i].tipo_val == PTR_PAR)
             {
-                printf("Parametro %d é PTR_PAR e é passado como PARAM.\n", i);
+                //movq -?(%rbp), %registradorParametro
                 codigo[indice++] = 0x48;
                 codigo[indice++] = 0x8b;
                 codigo[indice++] = destino[i];
@@ -136,18 +143,15 @@ void cria_func (void* f, DescParam params[], int n, unsigned char codigo[])
     }
 
     //parte fixa
+    //movq $endereço, %rax
     codigo[indice++] = 0x48; 
     codigo[indice++] = 0xb8;
     preencheHexaPtr(f, codigo, &indice); 
     
-    codigo[indice++] = 0xff; codigo[indice++] = 0xd0;
-    codigo[indice++] = 0xc9; 
-    codigo[indice++] = 0xc3; 
-
-    printf("Código gerado (em hexadecimal):\n");
-    for(int j = 0; j < indice; j++)
-    {
-        printf("%hhx ", codigo[j]);
-    }
-    printf("\n");
+    //call *%rax
+    codigo[indice++] = 0xff; 
+    codigo[indice++] = 0xd0;
+    
+    codigo[indice++] = 0xc9;//leave 
+    codigo[indice++] = 0xc3; //ret
 }
