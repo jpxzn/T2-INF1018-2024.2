@@ -7,7 +7,7 @@ int mult(int x, int y) {
   return x * y;
 }
 
-int main (void) {
+int main (void) { // inteiro indireto, inteiro fixo
   DescParam params[2];
   func_ptr f_mult;
   int i;
@@ -23,7 +23,7 @@ int main (void) {
 
   cria_func (mult, params, 2, codigo);
   f_mult = (func_ptr) codigo;
-
+  
   for (i = 1; i <=10; i++) {
     printf("%d\n", f_mult()); /* a nova função não recebe argumentos */
   }

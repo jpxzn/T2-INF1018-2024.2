@@ -1,0 +1,227 @@
+João Pedro Zaidman 2320464 3WA
+Davi Donato        2320399 3WA
+
+
+O programa funcionou, e todos os testes funcionram como deveriam,
+obtiveram os resultados esperados, a função cria_func foi capaz de criar dinamicamente
+a nova versão da função int mult(int x, int y) e salvar em 'codigo', e foi executada corretamente.
+
+
+Execução da função cria_func para a função:
+
+    int mult(int x, int y) {
+        return x * y;
+        }
+
+resultando na função f_mult
+Na nova função, ela recebe 2 parametros :
+Um ponteiro para um int,
+Um número int.
+Seu retorno é a multiplicação de um parâmetro pelo outro.
+
+
+O teste realizado executa 10 vezes a função criada dinamicamente através 
+de um loop FOR, onde o contador vai de 1 a 10, incrementando o valor de uma váriavel 'i'
+
+O endereço da varável 'i' foi passado como primeiro argumenta da nova função.
+O segundo argumento da função foi uma constante 10.
+
+O loop então acontece e deve retorna o valor deve printar o valor de i (o primeiro argumento) multiplicado por 10 (o segundo argumento)
+logo: 10, 20, 30, 40... 100.
+
+
+Execução do teste:
+$ gcc -Wall -Wa,--execstack -o teste1 cria_func.c Teste1.c                  
+$ ./teste1
+    10
+    20
+    30
+    40
+    50
+    60
+    70
+    80
+    90
+    100
+
+
+TODOS OS TESTES
+---------------------------------------------------------------------------------------------------------------------------------
+
+Teste 1: 
+
+CODE: =========================================== >>
+
+
+params[0].tipo_val = INT_PAR; /* o primeiro parãmetro de mult é int */
+params[0].orig_val = PARAM;   /* a nova função repassa seu parämetro */
+
+params[1].tipo_val = INT_PAR; /* o segundo parâmetro de mult é int */
+params[1].orig_val = FIX;     /* a nova função passa para mult a constante 10 */
+params[1].valor.v_int = 10;
+
+cria_func (mult, params, 2, codigo);
+f_mult = (func_ptr) codigo;   
+
+for (i = 1; i <=10; i++) {
+printf("%d\n", f_mult(i)); /* a nova função só recebe um argumento */
+}
+
+saída esperada : 10, 20, 30 ... 100
+
+$ gcc -Wall -Wa,--execstack -o teste1 cria_func.c Teste1.c
+$ ./teste1
+    10
+    20
+    30
+    40
+    50
+    60
+    70
+    80
+    90
+    100
+
+---------------------------------------------------------------------------------------------------------------------------------
+
+Teste 2: 
+
+CODE: =========================================== >>
+
+params[0].tipo_val = INT_PAR; /* a nova função passa para mult um valor inteiro */
+params[0].orig_val = IND;     /* que é o valor corrente da variavel i */
+params[0].valor.v_ptr = &i;
+
+params[1].tipo_val = INT_PAR; /* o segundo argumento passado para mult é a constante 10 */
+params[1].orig_val = FIX;
+params[1].valor.v_int = 10;
+
+cria_func (mult, params, 2, codigo);
+f_mult = (func_ptr) codigo;
+
+for (i = 1; i <=10; i++) {
+printf("%d\n", f_mult()); /* a nova função não recebe argumentos */
+}
+
+saida esperada : 10, 20, 30, 40, 50, 60, 70, 80, 90, 100
+
+$ gcc -Wall -Wa,--execstack -o teste2 cria_func.c Teste2.c
+$ ./teste2
+    10
+    20
+    30
+    40
+    50
+    60
+    70
+    80
+    90
+    100
+
+---------------------------------------------------------------------------------------------------------------------------------
+
+Teste 3:
+saida esperada : 
+'quero saber tudo' tem mesmo prefixo-12 de 'quero saber se a outra string é um prefixo dessa'? SIM
+'quero saber tudo' tem mesmo prefixo-16 de 'quero saber se a outra string é um prefixo dessa'? NAO
+
+$ gcc -Wall -Wa,--execstack -o teste3 cria_func.c Teste3.c
+$ ./teste3
+    'quero saber tudo' tem mesmo prefixo-12 de 'quero saber se a outra string é um prefixo dessa'? SIM
+    'quero saber tudo' tem mesmo prefixo-16 de 'quero saber se a outra string é um prefixo dessa'? NAO
+
+CODE: =========================================== >>
+
+#include <stdio.h>
+#include <string.h>
+#include "cria_func.h"
+
+typedef int (*func_ptr) (void* candidata, size_t n);
+
+char fixa[] = "quero saber se a outra string é um prefixo dessa";
+
+int main (void) { // ponteiro fixo, ponteiro parametro e inteiro parametro
+  DescParam params[3];
+  func_ptr mesmo_prefixo;
+  char s[] = "quero saber tudo";
+  int tam;
+  unsigned char codigo[500];
+
+  params[0].tipo_val = PTR_PAR; /* o primeiro parâmetro de memcmp é um ponteiro para char */
+  params[0].orig_val = FIX;     /* a nova função passa para memcmp o endereço da string "fixa" */
+  params[0].valor.v_ptr = fixa;
+
+  params[1].tipo_val = PTR_PAR; /* o segundo parâmetro de memcmp é também um ponteiro para char */
+  params[1].orig_val = PARAM;   /* a nova função recebe esse ponteiro e repassa para memcmp */
+
+  params[2].tipo_val = INT_PAR; /* o terceiro parâmetro de memcmp é um inteiro */
+  params[2].orig_val = PARAM;   /* a nova função recebe esse inteiro e repassa para memcmp */
+
+  cria_func (memcmp, params, 3, codigo);
+  mesmo_prefixo = (func_ptr) codigo;
+
+  tam = 12;
+  printf ("'%s' tem mesmo prefixo-%d de '%s'? %s\n", s, tam, fixa, mesmo_prefixo (s, tam)?"NAO":"SIM");
+  tam = strlen(s);
+  printf ("'%s' tem mesmo prefixo-%d de '%s'? %s\n", s, tam, fixa, mesmo_prefixo (s, tam)?"NAO":"SIM");
+
+  return 0;
+}
+
+---------------------------------------------------------------------------------------------------------------------------------
+
+Teste 4: 
+
+CODE: =========================================== >>>
+#include <stdio.h>
+#include "cria_func.h"
+
+typedef int (*func_ptr) ();
+
+int id(int * x){
+  return *x;
+}
+
+int main (void) {
+  DescParam params[2];
+  func_ptr f_id;
+  int i;
+  unsigned char codigo[500];
+  int fixo[] = {10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110};
+  int * ptr = &fixo[0];
+  int** ptr2 = &ptr;
+
+  params[0].tipo_val = PTR_PAR;
+  params[0].orig_val = IND;
+  params[0].valor.v_ptr = ptr2;
+  cria_func (id, params, 1, codigo);
+  f_id = (func_ptr) codigo;
+
+  for (; *ptr; ptr++) {
+
+    printf("%d\n", f_id());
+
+  }
+
+  return 0;
+}
+
+saida esperada: 10, 20, 30, 40, 50, 60, 70, 80, 90, 100
+
+$ gcc -Wall -Wa,--execstack -o teste4 cria_func.c Teste4.c
+$ ./teste4
+    10
+    20
+    30
+    40
+    50
+    60
+    70
+    80
+    90
+    100
+
+
+
+
+
