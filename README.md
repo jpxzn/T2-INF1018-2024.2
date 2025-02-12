@@ -12,4 +12,4 @@
 ---
 
 ## **Nota Final Obtida no Trabalho**
-**Nota**: 
+**Nota**: 10.0
